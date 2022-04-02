@@ -31,26 +31,29 @@ namespace Mickey
             VerifyFiles(infos);
         }
 
-        private void VerifyFiles(FileSystemInfo[] fsInfo)
+        private async void VerifyFiles(FileSystemInfo[] fsInfo)
         {
             foreach (FileSystemInfo info in fsInfo)
             {
                 if (info is DirectoryInfo)
                 {
                     /*Inserção das threads para adentrar nos arquivos desta pasta */
-                    Console.WriteLine(info.Name);
+                    //Console.WriteLine(info.Name);
 
-                    //DirectoryInfo directoryInfo = info as DirectoryInfo;
+                    DirectoryInfo directoryInfo = info as DirectoryInfo;
 
-                    //Task.Factory.StartNew(() => VerifyFiles(directoryInfo.GetFileSystemInfos()));
-                    
+                    await Task.Factory.StartNew(() => VerifyFiles(directoryInfo.GetFileSystemInfos()));
+                    //VerifyFiles(directoryInfo.GetFileSystemInfos());
+
+
                 }
                 else if (info is FileInfo)
                 {
                     /*Inserção de Match*/
-                    if (_file.GetFileName() == info.Name)
+                    await Task.Yield();
+                    if (File.Equals(_file, info))
                     {
-                        Console.WriteLine("MATCH");
+                        _file.GetContent(info.FullName);
                         break;
                     }
                 }
