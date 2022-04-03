@@ -9,15 +9,14 @@ namespace Mickey
             try
             {
                 File file = CreateNewFile();
-                
+
                 Console.WriteLine("Insira um Diretório base para busca: ");
-                var path = Console.ReadLine();
+                string path = Console.ReadLine();
 
                 Explorer explorer = new Explorer(file, path);
 
                 explorer.MatchFile();
 
-                Console.ReadLine();
             }
             catch (Exception ex)
             {
@@ -30,36 +29,23 @@ namespace Mickey
         static File CreateNewFile()
         {
             Console.Write("Nome: ");
-            var name = Console.ReadLine();
+            string name = Console.ReadLine();
 
-            Console.Write("Type: ");
-            var type = Console.ReadLine();
+            Console.Write("Type (txt, cs, js, ts): ");
+            string type = Console.ReadLine();
 
-            Console.Write("Date: ");
-            var date = Console.ReadLine();
+            Console.Write("Date (dd/MM/yyyy hh:mm:ss): ");
+            string date = Console.ReadLine();
 
-            Console.Write("File size: ");
-            var fileSize = Console.ReadLine();
+            Console.Write("File size (em Bytes): ");
+            string fileSize = Console.ReadLine();
 
             Console.Write("Content (phrase or word in file): ");
-            var content = Console.ReadLine();
+            string content = Console.ReadLine();
 
-            return new File()
-            {
-                Type = type,
-                Name = name,
-                Date = DateTime.Parse(date),
-                FileSize = int.Parse(fileSize),
-                Content = content
-            };
+            return new File(name, type, DateTime.Parse(date), double.Parse(fileSize), content);
+            //return new File("encontroukrl", "txt", DateTime.Parse("01/04/2022 20:14:32"), 970 , "jlaskdjfkljsklgjlfsdjgkldfjlkgjsdjflgjdlfjglkdsjgljsdk");
         }
 
-        /*
-            Nome: encontroukrl
-'           Type: txt
-'           Date: 01/04/2022 20:34
-'           File size: 1
-'           Content (phrase or word in file): jlaskdjfkljsklgjlfsdjgkldfjlkgjsdjflgjdlfjglkdsjgljsdk
-         */
     }
 }

@@ -6,51 +6,39 @@ namespace Mickey
 {
     public class File
     {
-        public string Type { get; set; }
-        public string Name { get; set; }
-        public DateTime Date { get; set; }
-        public int FileSize { get; set; }
-        public string Content { get; set; }
+        public string FileName { get; private set; }
+        public DateTime Date { get; private set; }
+        public double FileSize { get; private set; }
+        public string Content { get; private set; }
 
-        public string GetFileName()
+        public File(string name, string extension, DateTime date, double fileSize, string content)
         {
-            return $"{Name}.{Type}";
+            FileName = $"{name}.{extension}";
+            Date = date;
+            FileSize = fileSize;
+            Content = content;
         }
 
-        public override bool Equals(Object obj)
+        public bool GetContent(string path)
         {
-            File fl = obj as File;
-            if (fl == null)
-                return false;
-            
-            return Name == fl.Name && 
-                   Date == fl.Date && 
-                   FileSize == fl.FileSize && 
-                   Content == fl.Content &&
-                   GetFileName() == fl.GetFileName();
-        }
-
-        public override string ToString()
-        {
-            return
-                $"Name: {Name}\n" +
-                $"Type: {Type}\n" +
-                $"Date: {Date.ToString("G")}\n" +
-                $"File Size:{FileSize}\n" +
-                $"Content: {Content}\n";
-        }
-
-        public void GetContent(string path)
-        {
-            using (FileStream stream = System.IO.File.OpenRead(path))
+            try
             {
-                byte[] buffer = new byte[1024];
-                UTF8Encoding reader = new UTF8Encoding(true);
-
-                while (stream.Read(buffer, 0, buffer.Length) > 0)
+                using (FileStream stream = System.IO.File.OpenRead(path))
                 {
-                    Console.WriteLine(reader.GetString(buffer));
+                    byte[] buffer = new byte[1024];
+                    UTF8Encoding reader = new UTF8Encoding(true);
+
+                    while (stream.Read(buffer, 0, buffer.Length) > 0)
+                    {
+                        if (reader.GetString(buffer).Contains(Content))
+                            return true;
+                    }
+                    return false;
                 }
+            }
+            catch (IOException ex)
+            {
+                return false;
             }
         }
     }

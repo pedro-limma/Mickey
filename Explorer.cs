@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Diagnostics;
 using System.IO;
-using System.Threading;
+using System.Threading.Tasks;
 
 namespace Mickey
 {
@@ -12,6 +9,9 @@ namespace Mickey
     {
         private readonly File _file;
         public string Path { get; private set; }
+        public static bool IsMatch { get; private set; }
+
+        private static readonly Stopwatch _stopwatch = new Stopwatch();
 
         public Explorer(File file, string path)
         {
@@ -26,38 +26,81 @@ namespace Mickey
             if (!directory.Exists)
                 throw new DirectoryNotFoundException("The directory does not exist.");
 
-            FileSystemInfo[] infos = directory.GetFileSystemInfos();
-
-            VerifyFiles(infos);
+            try
+            {
+                Parallel.Invoke(() => ScanDirectories(Path));
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
         }
 
-        private async void VerifyFiles(FileSystemInfo[] fsInfo)
+        private void ScanDirectories(string path)
         {
-            foreach (FileSystemInfo info in fsInfo)
+            _stopwatch.Start();
+            if (IsMatch) return;
+            try
             {
-                if (info is DirectoryInfo)
+                VerifyFile(path);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+
+            if (!IsMatch)
+            {
+                string[] directories = Directory.GetDirectories(path);
+
+                try
                 {
-                    /*Inserção das threads para adentrar nos arquivos desta pasta */
-                    //Console.WriteLine(info.Name);
-
-                    DirectoryInfo directoryInfo = info as DirectoryInfo;
-
-                    await Task.Factory.StartNew(() => VerifyFiles(directoryInfo.GetFileSystemInfos()));
-                    //VerifyFiles(directoryInfo.GetFileSystemInfos());
-
-
+                    Parallel.ForEach(directories, d => ScanDirectories(d));
                 }
-                else if (info is FileInfo)
+                catch (UnauthorizedAccessException ex)
                 {
-                    /*Inserção de Match*/
-                    await Task.Yield();
-                    if (File.Equals(_file, info))
-                    {
-                        _file.GetContent(info.FullName);
-                        break;
-                    }
+                    Console.WriteLine(ex.Message);
                 }
             }
         }
+
+        private void VerifyFile(string path)
+        {
+            string[] Files = Directory.GetFiles(path);
+
+            foreach (string File in Files)
+            {
+                if (IsMatch) return;
+
+                FileInfo info = new FileInfo(File);
+
+                if (Equals(info))
+                {
+                    Console.WriteLine($"MATCH, Arquivo encontrado! {info.FullName}");
+                    IsMatch = true;
+
+                    _stopwatch.Stop();
+                    Console.WriteLine("Tempo decorrido: {0:hh\\:mm\\:ss}", _stopwatch.Elapsed);
+
+                    break;
+                }
+            }
+            IsMatch = false;
+        }
+
+        private bool Equals(FileInfo fileInfo)
+        {
+            bool contentInFile = _file.GetContent(fileInfo.FullName);
+
+            if (_file.FileName == fileInfo.Name &&
+                _file.Date.ToString("G") == fileInfo.CreationTime.ToString("G") &&
+                _file.FileSize == fileInfo.Length &&
+                contentInFile)
+                return true;
+
+            return false;
+        }
     }
+
+
 }
