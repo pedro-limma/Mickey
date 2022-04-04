@@ -85,7 +85,6 @@ namespace Mickey
                     break;
                 }
             }
-            IsMatch = false;
         }
 
         private bool Equals(FileInfo fileInfo)
