@@ -1,31 +1,42 @@
 ﻿using System;
-using System.Diagnostics;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 
 namespace Mickey
 {
+    /// <summary>
+    /// Minha Classe Explorer responsável por guardar os 
+    /// métodos de acesso varredura dos arquivos e diretórios 
+    /// utilizando paralelismo
+    /// </summary>
     public class Explorer
     {
-        private readonly File _file;
-        public string Path { get; private set; }
+
         public static bool IsMatch { get; private set; }
+        private readonly File _file;
+        private readonly List<FileInfo> _listFileInfo;
+        public string Path { get; private set; }
 
-        private static readonly Stopwatch _stopwatch = new Stopwatch();
-
-        public Explorer(File file, string path)
+        /// <summary>
+        /// Construtor para fazer a atribuição de valores para nossas propriedades, "File" e "Path"
+        /// </summary>
+        /// <param name="file">Dados do arquivo a ser buscado</param>
+        /// <param name="path">Caminho base de busca</param>
+        /// <param name="list">Lista para inserção de arquivos encontrados</param>
+        public Explorer(File file, string path, List<FileInfo> list)
         {
             _file = file;
             Path = path;
+            _listFileInfo = list;
         }
 
+
+        /// <summary>
+        /// Esta função vai fazer a invoke da nosso método "ScanDirectories" de forma paralela.
+        /// </summary>
         public void MatchFile()
         {
-            DirectoryInfo directory = new DirectoryInfo($@"{Path}");
-
-            if (!directory.Exists)
-                throw new DirectoryNotFoundException("The directory does not exist.");
-
             try
             {
                 Parallel.Invoke(() => ScanDirectories(Path));
@@ -36,9 +47,15 @@ namespace Mickey
             }
         }
 
+
+        /// <summary>
+        /// Função responsavél por verificar se o arquivo foi encontrado, 
+        /// utilizando recursão para que cada próximo diretório seja executado
+        /// em uma thread disponíl de form a paralela
+        /// </summary>
+        /// <param name="path">Caminho base para busca</param>
         private void ScanDirectories(string path)
         {
-            _stopwatch.Start();
             if (IsMatch) return;
             try
             {
@@ -64,6 +81,13 @@ namespace Mickey
             }
         }
 
+
+        /// <summary>
+        /// Este método vai fazer a varredura nos arquivos de determinado
+        /// diretório verificando cada parâmetroem comum e adicionando na
+        /// lista de arquivos que deram MATCH
+        /// </summary>
+        /// <param name="path">Diretório da base</param>
         private void VerifyFile(string path)
         {
             string[] Files = Directory.GetFiles(path);
@@ -74,32 +98,22 @@ namespace Mickey
 
                 FileInfo info = new FileInfo(File);
 
-                if (Equals(info))
-                {
-                    Console.WriteLine($"MATCH, Arquivo encontrado! {info.FullName}");
-                    IsMatch = true;
-
-                    _stopwatch.Stop();
-                    Console.WriteLine("Tempo decorrido: {0:hh\\:mm\\:ss}", _stopwatch.Elapsed);
-
-                    break;
-                }
+                IsEquals(info);
             }
         }
 
-        private bool Equals(FileInfo fileInfo)
+        /// <summary>
+        /// Método que vai fazer a comparação dos parâmetros de busca informados e 
+        /// vai inserir na lista de arquivos encontrados
+        /// </summary>
+        /// <param name="fileInfo"></param>
+        private void IsEquals(FileInfo fileInfo)
         {
-            bool contentInFile = _file.GetContent(fileInfo.FullName);
-
-            if (_file.FileName == fileInfo.Name &&
-                _file.Date.ToString("G") == fileInfo.CreationTime.ToString("G") &&
-                _file.FileSize == fileInfo.Length &&
-                contentInFile)
-                return true;
-
-            return false;
+            string filename = $"{_file.Name}.{_file.Extension}";
+            if ((fileInfo.Name == filename || _file.Extension == fileInfo.Extension || _file.Size == fileInfo.Length) &&
+                !_listFileInfo.Contains(fileInfo))
+                _listFileInfo.Add(fileInfo);
         }
+
     }
-
-
 }
