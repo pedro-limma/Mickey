@@ -18,10 +18,11 @@ namespace Mickey
                 Console.WriteLine("Insira um Diretório base para busca: ");
                 string path = Console.ReadLine();
 
-                Explorer explorer = new Explorer(file, path);
+                //Explorer explorer = new Explorer(file, path);
+                ExplorerSynchronous explorerSynchronous = new ExplorerSynchronous(file, path);
 
                 _stopwatch.Start();
-                explorer.MatchFile();
+                explorerSynchronous.MatchFile();
                 _stopwatch.Stop();
             }
             catch (Exception ex)
