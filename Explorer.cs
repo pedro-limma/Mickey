@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -15,7 +14,6 @@ namespace Mickey
 
         public static bool IsMatch { get; private set; }
         private readonly File _file;
-        private readonly List<FileInfo> _listFileInfo;
         public string Path { get; private set; }
 
         /// <summary>
@@ -23,12 +21,10 @@ namespace Mickey
         /// </summary>
         /// <param name="file">Dados do arquivo a ser buscado</param>
         /// <param name="path">Caminho base de busca</param>
-        /// <param name="list">Lista para inserção de arquivos encontrados</param>
-        public Explorer(File file, string path, List<FileInfo> list)
+        public Explorer(File file, string path)
         {
             _file = file;
             Path = path;
-            _listFileInfo = list;
         }
 
 
@@ -68,10 +64,10 @@ namespace Mickey
 
             if (!IsMatch)
             {
-                string[] directories = Directory.GetDirectories(path);
 
                 try
                 {
+                    string[] directories = Directory.GetDirectories(path);
                     Parallel.ForEach(directories, d => ScanDirectories(d));
                 }
                 catch (UnauthorizedAccessException ex)
@@ -109,10 +105,8 @@ namespace Mickey
         /// <param name="fileInfo"></param>
         private void IsEquals(FileInfo fileInfo)
         {
-            string filename = $"{_file.Name}.{_file.Extension}";
-            if ((fileInfo.Name == filename || _file.Extension == fileInfo.Extension || _file.Size == fileInfo.Length) &&
-                !_listFileInfo.Contains(fileInfo))
-                _listFileInfo.Add(fileInfo);
+            if ((fileInfo.Name == _file.Name && _file.Size == fileInfo.Length))
+                Console.WriteLine($"Arquivo encontrado em {fileInfo.FullName}");
         }
 
     }
